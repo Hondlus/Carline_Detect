@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-
+from skimage.transform import hough_line
 
 threshold = 0.2
 
@@ -36,22 +36,26 @@ def least_squares_fit(lines):
 
 if __name__ == '__main__':
 
-    img_color = cv2.imread('./testimg/img2.png')
+    img_color = cv2.imread('./testimg/img.png')
     height, width, _ = img_color.shape
     img = cv2.cvtColor(img_color, cv2.COLOR_BGR2GRAY)
     mask = np.zeros_like(img)
 
-    edge_img = cv2.Canny(img, 202, 696)
+    edge_img = cv2.Canny(img, 112, 267)
     # 提取roi感兴趣区域
-    cv2.fillPoly(mask, np.array([[[int(width * 0.2), int(height * 0.1)], [0, int(height * 0.9)], [width, int(height * 0.9)], [int(width * 0.8), int(height * 0.1)]]]), 255)
+    # cv2.fillPoly(mask, np.array([[[int(width * 0.2), int(height * 0.1)], [0, int(height * 0.9)], [width, int(height * 0.9)], [int(width * 0.8), int(height * 0.1)]]]), 255)
+    cv2.fillPoly(mask, np.array([[[int(0), int(0)], [0, int(height)], [width, int(height)], [int(width), int(0)]]]), 255)
     # cv2.fillPoly(mask, np.array([[[0, int(height * 0.5)], [0, int(height * 0.9)], [width, int(height * 0.9)], [width, int(height * 0.5)]]]), 255)
     masked_edge_img = cv2.bitwise_and(edge_img, mask)
     cv2.imshow('masked_edge_img', masked_edge_img)
+    cv2.waitKey(0)
     # 霍夫直线检测
     lines = cv2.HoughLinesP(masked_edge_img, 1, np.pi / 180, 100, minLineLength=100, maxLineGap=10)
     # 按照斜率划分车道线
-    horizantal_lines = [line for line in lines if
-                        0.1 >= calculate_slope(line) >= 0 or -0.1 <= calculate_slope(line) <= 0]
+    # horizantal_lines = [line for line in lines if
+    #                     0.1 >= calculate_slope(line) >= 0 or -0.1 <= calculate_slope(line) <= 0]
+    horizantal_lines = filter_lines(lines)
+
     # 可视化直线
     if horizantal_lines is not None:
         for line in horizantal_lines:
