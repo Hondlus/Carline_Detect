@@ -11,19 +11,25 @@ def track_white(image):
     mask = cv2.inRange(hsv, lower_white, upper_white)
     return mask
 
-def cal_angle(x1, y1, x2, y2):
-    if x2 - x1 == 0:
+# 计算直线的角度和长度
+def cal_angle_distance(x1, y1, x2, y2):
+    x_bias = x2 - x1
+    y_bias = y2 - y1
+
+    distance = np.sqrt(x_bias ** 2 + y_bias ** 2)
+
+    if x_bias == 0:
         angle = 90
         # print("angle90: ", angle)
-    elif y2 - y1 == 0:
+    elif y_bias == 0:
         angle = 0
         # print("angle0: ", angle)
     else:
-        k = -(y2 - y1) / (x2 - x1)
+        k = -y_bias / x_bias
         # print("k", k)
         angle = int(np.arctan(k) * 180 / np.pi)
         # print("anglek: ", angle)
-    return angle
+    return angle, distance
 
 def least_squares_fit(lines):
     x_coords = np.ravel([[line[0][0], line[0][2]] for line in lines])
@@ -35,7 +41,9 @@ def least_squares_fit(lines):
 
 if __name__ == '__main__':
     line_list = []
-    image = cv2.imread('./testimg/img.png')
+    image = cv2.imread('./testimg/123.jpg')
+    height, width = image.shape[:2]
+    # print("height, width: ", height, width)
     mask = track_white(image)
     cv2.imshow('mask', mask)
 
@@ -49,17 +57,22 @@ if __name__ == '__main__':
         for line in lines:
             x1, y1, x2, y2 = line[0]
             # 筛选想要的直线
-            angle = cal_angle(x1, y1, x2, y2)
-            if angle == 0:
+            angle, distance = cal_angle_distance(x1, y1, x2, y2)
+            if angle == 0 and width * 0.25 <= distance <= width:
             # if -1 <= angle <= 1:
                 line_list.append(line)
-                cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                # print(distance)
+                cv2.line(image, (x1, y1), (x2, y2), (255, 0, 0), 2)
             else:
                 cv2.line(image, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                # pass
 
-    result_line = least_squares_fit(line_list)
-    cv2.line(image, result_line[0], result_line[1], (255, 0, 255), 2)
+    if len(line_list) != 0:
+        result_line = least_squares_fit(line_list)
+        cv2.line(image, result_line[0], result_line[1], (0, 255, 0), 2)
     cv2.imshow('image', image)
+
+    line_list.clear()
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
