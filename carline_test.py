@@ -37,11 +37,11 @@ def least_squares_fit(lines):
     poly = np.polyfit(x_coords, y_coords, 1)
     point_min = (np.min(x_coords), np.polyval(poly, np.min(x_coords)))
     point_max = (np.max(x_coords), np.polyval(poly, np.max(x_coords)))
-    return np.array([point_min, point_max], dtype=np.int)
+    return np.array([point_min, point_max], dtype=np.int_)
 
 if __name__ == '__main__':
     line_list = []
-    image = cv2.imread('./testimg/123.jpg')
+    image = cv2.imread('./testimg/img.png')
     height, width = image.shape[:2]
     # print("height, width: ", height, width)
     mask = track_white(image)
